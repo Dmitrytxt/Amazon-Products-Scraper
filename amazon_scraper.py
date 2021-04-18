@@ -1,5 +1,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
+from spreadsheet import Spreadsheet
+import googleapiclient.errors
 
 
 def create_driver():
@@ -36,6 +38,30 @@ def get_item(item):
     return result
 
 
+def import_to_googlesheets(records, search_term):
+    ss = Spreadsheet('creds.json', debug_mode=False)
+    try:
+        f = open('temp.txt', 'x')
+        email = input('Email: ')
+        ss.create('Amazon', search_term)
+        ss.share_with_email_for_writing(email)
+        f.write(ss.spreadsheet_id)
+        f.close()
+    except FileExistsError:
+        f = open('temp.txt', 'r')
+        ss.set_spreadsheet_by_id(f.read())
+        try:
+            ss.add_sheet(search_term)
+        except googleapiclient.errors.HttpError:
+            ss.set_sheet_by_title(search_term)
+            ss.clear_sheet()
+        f.close()
+    finally:
+        ss.prepare_set_values('A1:E1', [['Name', 'Price', 'Rating', 'Reviews', 'Url']])
+        ss.prepare_set_values('A2:E%d' % (len(records) + 1), records)
+        ss.run_prepared()
+
+
 def main(search_term):
     url = get_url(search_term)
     driver = create_driver()
@@ -51,10 +77,9 @@ def main(search_term):
             if record:
                 records.append(record)
 
-    driver.close()
+    import_to_googlesheets(records, search_term)
 
-    for i in records:
-        print(i)
+    driver.close()
 
 
 if __name__ == '__main__':
