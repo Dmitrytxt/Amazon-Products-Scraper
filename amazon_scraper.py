@@ -5,8 +5,8 @@ import googleapiclient.errors
 import csv
 
 
-def create_driver():
-    driver = webdriver.Chrome(executable_path='C:\chromedriver\chromedriver')
+def create_driver(driver_path):
+    driver = webdriver.Chrome(executable_path=driver_path)
     return driver
 
 
@@ -31,7 +31,6 @@ def get_item(item):
         reviews = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
     except AttributeError:
         reviews = ''
-
     name = item.h2.a.text.strip()
     link = 'https://www.amazon.com' + item.h2.a.get('href')
 
@@ -39,8 +38,8 @@ def get_item(item):
     return result
 
 
-def import_to_googlesheets(records, search_term):
-    ss = Spreadsheet('creds.json', debug_mode=False)
+def import_to_googlesheets(records, search_term, credentials):
+    ss = Spreadsheet(credentials, debug_mode=False)
     try:
         f = open('temp.txt', 'x')
         email = input('Email: ')
@@ -71,9 +70,9 @@ def save_to_scv(name, records):
         writer.writerows(records)
 
 
-def main(search_term):
+def main(search_term, credentials, driver_path):
     url = get_url(search_term)
-    driver = create_driver()
+    driver = create_driver(driver_path)
     records = []
 
     for page in range(1, 21):
@@ -86,7 +85,7 @@ def main(search_term):
             if record:
                 records.append(record)
 
-    import_to_googlesheets(records, search_term)
+    import_to_googlesheets(records, search_term, credentials)
     save_to_scv(search_term, records)
 
     driver.close()
@@ -94,4 +93,6 @@ def main(search_term):
 
 if __name__ == '__main__':
     term = input('Search term: ')
-    main(term)
+    CREDENTIALS = 'creds.json'
+    d_path = 'C:\chromedriver\chromedriver'
+    main(term, CREDENTIALS, d_path)
