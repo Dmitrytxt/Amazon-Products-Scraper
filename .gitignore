@@ -1,2 +1,4 @@
 temp.txt
 .idea/
+__pycache__/
+creds.json

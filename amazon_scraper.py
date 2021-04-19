@@ -1,5 +1,6 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
+import csv
 
 
 def create_driver():
@@ -36,6 +37,14 @@ def get_item(item):
     return result
 
 
+def save_to_scv(name, records):
+    header = ['Name', 'Price', 'Rating', 'Reviews', 'Url']
+    with open(name + '.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(records)
+
+
 def main(search_term):
     url = get_url(search_term)
     driver = create_driver()
@@ -53,8 +62,7 @@ def main(search_term):
 
     driver.close()
 
-    for i in records:
-        print(i)
+    save_to_scv(search_term, records)
 
 
 if __name__ == '__main__':
